@@ -8,8 +8,8 @@
   var UI = {
     eyebrow: { zh: 'Sea Glass · 组件', en: 'Sea Glass · Components' },
     title: { zh: 'Sea Glass 组件', en: 'Sea Glass components' },
-    lede: { zh: '15 个 React 组件，全部以 window.SeaGlass 暴露。色块为磨砂质感：颜色饱和、表面有细小的碎片状颗粒、底部偏亮、下方有同形投影。每个色块只用一个色调的四个颜色：fill 作底色，hi 作选中高亮，glow 作底部高光，ink 作文字。所有色块都有跟随鼠标的悬停光、按下光和按下位置相关的果冻形变。下方示例都可以直接操作，色调可切换。',
-            en: 'Fifteen React components, all exposed on window.SeaGlass. Surfaces are frosted: saturated color, fine flecks, a lighter lower quarter and a same-shape shadow below. Each surface uses the four colors of one tone: fill for the base, hi for selection, glow for the lower highlight, ink for text. Every surface has a pointer-following hover light, a press light and a jelly squash that depends on where it is pressed. Every example below is live, and its tone can be switched.' },
+    lede: { zh: '15 个 React 组件，通过 npm 包 sea-glass 或 window.SeaGlass 使用。色块为磨砂质感：颜色饱和、表面有细小的碎片状颗粒、底部偏亮、下方有同形投影。每个色块只用一个色调的四个颜色：fill 作底色，hi 作选中高亮，glow 作底部高光，ink 作文字。所有色块都有跟随鼠标的悬停光、按下光和按下位置相关的果冻形变。下方示例都可以直接操作，色调可切换。',
+            en: 'Fifteen React components, available from the sea-glass npm package or on window.SeaGlass. Surfaces are frosted: saturated color, fine flecks, a lighter lower quarter and a same-shape shadow below. Each surface uses the four colors of one tone: fill for the base, hi for selection, glow for the lower highlight, ink for text. Every surface has a pointer-following hover light, a press light and a jelly squash that depends on where it is pressed. Every example below is live, and its tone can be switched.' },
     theme: { zh: '主题', en: 'Theme' }, language: { zh: '语言', en: 'Language' },
     system: { zh: '系统', en: 'System' }, day: { zh: '日间', en: 'Day' }, night: { zh: '夜间', en: 'Night' },
     toc: { zh: '组件目录', en: 'Components' }, params: { zh: '参数', en: 'Parameters' }, paramsLede: { zh: '玻璃质感的全部可调参数。每一项都是 CSS 自定义属性，可以写在 :root 上作用于整页，也可以写在任意元素或单个组件上；颗粒参数作用于整页。也可以在脚本中调用 SeaGlass.setParams({ bandStrength: 50 })。调整结果保存在本浏览器中，下方的 CSS 可直接复制使用。', en: 'Every adjustable parameter of the glass. Each is a CSS custom property: set it on :root for the whole page, or on any element or single component; grain settings apply to the whole page. From script, call SeaGlass.setParams({ bandStrength: 50 }). Your settings are kept in this browser, and the CSS below can be copied as is.' }, reset: { zh: '恢复默认', en: 'Reset all' }, copy: { zh: '复制 CSS', en: 'Copy CSS' }, copied: { zh: '已复制', en: 'Copied' }, noChange: { zh: '/* 与默认值相同，无需覆盖 */', en: '/* Same as the defaults; nothing to override */' }, grain: { zh: '颗粒强度', en: 'Grain' }, tones: { zh: '色调', en: 'Tones' }, basics: { zh: '基础', en: 'Foundations' },
@@ -17,8 +17,12 @@
     toneGroup: { zh: '色调', en: 'tone' },
     props: { zh: 'Props', en: 'Props' }, rules: { zh: '规则', en: 'Guidelines' },
     cols: { zh: ['属性', '类型', '默认值', '说明'], en: ['Prop', 'Type', 'Default', 'Description'] },
-    foot: { zh: '使用方式：先加载 React 18 与 ReactDOM 18，再加载 tokens.css 与 components/bundle.css，最后加载 components/bundle.js。字体 Google Sans Flex 来自 Google Fonts。界面文字由使用方传入，组件本身不包含固定文案，只有 PromptBar 三个按钮的无障碍名称有英文默认值。',
-           en: 'To use: load React 18 and ReactDOM 18, then tokens.css and components/bundle.css, then components/bundle.js. The Google Sans Flex font comes from Google Fonts. All visible text is passed in by the consumer; the components contain no fixed copy except the English default accessible names of the three PromptBar buttons.' }
+    credit: { zh: '设计来源：', en: 'Design source: ' },
+    usage: { zh: '使用', en: 'Usage' }, copyCode: { zh: '复制', en: 'Copy' },
+    usageNote: { zh: '需要 React 18 及以上版本。字体 Google Sans Flex 需自行从 Google Fonts 引入。包含 ESM、CommonJS 与 TypeScript 类型，可在服务端渲染时加载。',
+                 en: 'Requires React 18 or later. Load the Google Sans Flex font from Google Fonts yourself. Ships ESM, CommonJS and TypeScript types, and loads during server rendering.' },
+    foot: { zh: '界面文字由使用方传入，组件本身不包含固定文案，只有 PromptBar 三个按钮的无障碍名称有英文默认值。',
+           en: 'All visible text is passed in by the consumer; the components contain no fixed copy except the English default accessible names of the three PromptBar buttons.' }
   };
   var TONE_NOTE = {
     cobalt: { zh: '主要操作', en: 'Primary actions' }, lilac: { zh: '导航、创作', en: 'Navigation, creation' }, seafoam: { zh: '完成、在线', en: 'Done, online' },
@@ -241,6 +245,30 @@
           h(S.Button, { size: 'sm', tone: 'cobalt', onClick: copy, disabled: !lines.length }, cp[0] ? L(UI.copied) : L(UI.copy)))));
   }
 
+  var USAGE = {
+    npm: "npm i sea-glass\n\nimport 'sea-glass/tokens.css';\nimport 'sea-glass/style.css';\nimport { Button, SegmentedNav } from 'sea-glass';",
+    script: '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">\n' +
+      '<link rel="stylesheet" href="https://unpkg.com/sea-glass/tokens/tokens.css">\n' +
+      '<link rel="stylesheet" href="https://unpkg.com/sea-glass/components/bundle.css">\n' +
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"><\/script>\n' +
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"><\/script>\n' +
+      '<script src="https://unpkg.com/sea-glass/components/bundle.js"><\/script>\n' +
+      '<script>const { Button, SegmentedNav } = window.SeaGlass;<\/script>'
+  };
+  function Usage() {
+    var L = useL(), mode = R.useState('npm'), cp = R.useState(false), code = USAGE[mode[0]];
+    function copy() {
+      var done = function () { cp[1](true); setTimeout(function () { cp[1](false); }, 1500); };
+      try { navigator.clipboard.writeText(code).then(done, function () {}); } catch (e) {}
+    }
+    return h('section', { className: 'usage', 'aria-labelledby': 'usage-title' },
+      h('div', { className: 'usage-head' },
+        h('h2', { id: 'usage-title' }, L(UI.usage)),
+        h(S.SegmentedNav, { 'aria-label': L(UI.usage), tone: 'frost', value: mode[0], onChange: mode[1], items: [{ id: 'npm', label: 'npm' }, { id: 'script', label: '<script>' }] }),
+        h(S.Button, { size: 'sm', tone: 'cobalt', onClick: copy }, cp[0] ? L(UI.copied) : L(UI.copyCode))),
+      h('pre', { className: 'param-out usage-code' }, code),
+      h('p', { className: 'cap usage-note' }, L(UI.usageNote)));
+  }
   function Page(p) {
     var L = useL();
     return h('div', { className: 'page' },
@@ -248,12 +276,14 @@
         h('div', { className: 'mast-text' },
           h('p', { className: 'eyebrow' }, L(UI.eyebrow)),
           h('h1', null, L(UI.title)),
-          h('p', { className: 'lede' }, L(UI.lede))),
+          h('p', { className: 'lede' }, L(UI.lede)),
+          h('p', { className: 'credit' }, L(UI.credit), h('a', { href: 'https://x.com/jmcg_me/status/2109384135257305221', target: '_blank', rel: 'noopener noreferrer' }, '@jmcg_me'))),
         h('div', { className: 'mast-ctl' },
           h('div', { className: 'ctl' }, h('span', { className: 'cap', id: 'lbl-lang' }, L(UI.language)),
             h(S.SegmentedNav, { 'aria-label': L(UI.language), tone: 'frost', value: p.lang[0], onChange: p.lang[1], items: LANGS.map(function (x) { return { id: x.id, label: x.label }; }) })),
           h('div', { className: 'ctl' }, h('span', { className: 'cap' }, L(UI.theme)),
             h(S.SegmentedNav, { 'aria-label': L(UI.theme), tone: 'frost', value: p.theme[0], onChange: p.theme[1], items: [{ id: 'system', label: L(UI.system) }, { id: 'light', label: L(UI.day) }, { id: 'dark', label: L(UI.night) }] })))),
+      h(Usage),
       h('div', { className: 'layout' },
         h('nav', { className: 'toc', 'aria-label': L(UI.toc) },
           h('button', { type: 'button', className: 'toc-link toc-btn', onClick: function () { p.paramsOpen[1](true); } }, L(UI.params)),

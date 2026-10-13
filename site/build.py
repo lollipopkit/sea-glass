@@ -105,6 +105,12 @@ td code{white-space:nowrap}
 .tone-hi span{font-size:13px;line-height:18px}
 .tone-card code{color:var(--sg-ink);font-size:11.5px}.tone-card .tone-codes{padding:0 var(--space-3)}
 .foot{color:var(--ink-muted);font-size:14px;line-height:21px;border-top:1px solid var(--line);padding-top:var(--space-6);max-width:70ch}
+.credit{margin:var(--space-2) 0 0;font-size:14px;line-height:21px;color:var(--ink-muted)}
+.credit a{color:var(--ink);text-underline-offset:3px}
+.usage{padding-bottom:var(--space-8);min-width:0}
+.usage-head{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-3) var(--space-4);margin-bottom:var(--space-3)}
+.usage-head h2{margin:0 auto 0 0}
+.usage-note{margin:var(--space-2) 0 0}
 @media (max-width:900px){
  .layout{grid-template-columns:minmax(0,1fr);gap:var(--space-6)}
  .toc{position:static;flex-direction:row;overflow-x:auto;padding-bottom:var(--space-2)}
