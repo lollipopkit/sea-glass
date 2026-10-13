@@ -581,7 +581,10 @@
   function rimUpdate(el) {
     if (!el.isConnected) { if (rimRO) rimRO.unobserve(el); return; }
     var w = el.offsetWidth, h = el.offsetHeight; if (!w || !h) return;
-    var cs = getComputedStyle(el), R = Math.min(parseFloat(cs.borderTopLeftRadius) || 0, w / 2, h / 2), layers = rimLayers(el, cs);
+    /* --sg-rim-radius pins the mask to one corner radius, for surfaces whose radius animates while the rim is shown
+       only at one end of it: the mask then never changes at the end of the transition */
+    var cs = getComputedStyle(el), rr = parseFloat(cs.getPropertyValue('--sg-rim-radius'));
+    var R = Math.min(isFinite(rr) ? rr : parseFloat(cs.borderTopLeftRadius) || 0, w / 2, h / 2), layers = rimLayers(el, cs);
     var mw = w, mh = h, sx = 0, sy = 0;
     if (RIM_9) {
       var reachX = 0, reachY = 0;
