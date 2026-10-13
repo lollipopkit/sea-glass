@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sea Glass 最小示例</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+<link rel="stylesheet" href="../tokens/tokens.css">
+<link rel="stylesheet" href="../components/bundle.css">
+<style>
+  body { padding: 32px 16px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 32px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="../components/bundle.js"></script>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  function App() {
+    return h('div', null,
+      h('div', { className: 'row' },
+        h(S.Button, { tone: 'cobalt' }, '继续'),
+        h(S.Button, null, '取消'),
+        h(S.SegmentedNav, { 'aria-label': '视图', items: [{ id: 'a', label: '照片', icon: 'image' }, { id: 'b', label: '合集' }] }),
+        h(S.Fab, { tone: 'aqua', icon: 'edit' }, '写邮件')),
+      h('div', { className: 'row' },
+        h(S.PromptBar, { placeholder: '问点什么' })),
+      h('div', { className: 'row' },
+        h(S.Toolbar, { 'aria-label': '照片操作', items: [{ icon: 'share', label: '分享' }, { icon: 'download', label: '下载' }, { icon: 'more-vert', label: '更多' }],
+          menuItems: [{ icon: 'link', label: '复制链接' }, { icon: 'settings', label: '详细信息' }] })));
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
+</body>
+</html>

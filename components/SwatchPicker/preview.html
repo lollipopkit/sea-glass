@@ -1,0 +1,13 @@
+<!-- @dsCard group="Input" height=170 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>SwatchPicker — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-stage"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(S.SwatchPicker, { 'aria-label': 'Accent', defaultValue: 'b', options: [{ id: 'a', color: '#fde3cb', label: 'Cream' }, { id: 'b', color: '#fcd4b8', label: 'Peach' }, { id: 'c', color: '#fbbd98', label: 'Apricot' }, { id: 'd', color: '#bccaf6', label: 'Periwinkle' }, { id: 'e', color: '#b5e6cd', label: 'Mint' }] }));
+</script>
+</body>
+</html>

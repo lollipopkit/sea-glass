@@ -1,0 +1,16 @@
+<!-- @dsCard group="Containers" height=260 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>ScrollArea — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-stage" style="align-items:flex-start"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  function rows(n) { var a = []; for (var i = 1; i <= n; i++) a.push(h('div', { key: i, style: { padding: '8px 16px', borderBottom: '1px solid var(--line)' } }, 'Message ' + i)); return a; }
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h('div', { style: { width: '240px' } }, h(S.ScrollArea, { maxHeight: 180, 'aria-label': 'Messages', style: { background: 'var(--surface)' } }, rows(24))),
+    h('div', { style: { width: '260px' } }, h(S.GlassCard, { tone: 'lilac', title: 'Notes' }, h(S.ScrollArea, { maxHeight: 120, tone: 'lilac', 'aria-label': 'Notes' }, rows(12))))));
+</script>
+</body>
+</html>

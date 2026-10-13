@@ -1,0 +1,24 @@
+<!-- @dsCard group="Actions" height=300 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Button — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-col"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h('div', { className: 'sg-row', style: { display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' } },
+      h(S.Button, { tone: 'cobalt' }, 'Continue'),
+      h(S.Button, null, 'Cancel'),
+      h(S.Button, { tone: 'seafoam', icon: 'plus' }, 'New collection'),
+      h(S.Button, { disabled: true }, 'Disabled')),
+    h('div', { style: { display: 'flex', gap: 'var(--space-4)', alignItems: 'center' } },
+      h(S.Button, { tone: 'lilac', size: 'lg', icon: 'image' }, 'Create'),
+      h(S.Button, { tone: 'amber', size: 'sm' }, 'Review 3 items')),
+    h('div', { style: { display: 'flex', gap: 'var(--space-4)', alignItems: 'center' } },
+      h(S.Button, { tone: 'coral', size: 'xl', icon: 'call-end', filled: true, label: 'End call' }),
+      h(S.Button, { tone: 'cobalt', size: 'xl' }, 'Join meeting'))));
+</script>
+</body>
+</html>

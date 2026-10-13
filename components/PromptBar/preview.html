@@ -1,0 +1,13 @@
+<!-- @dsCard group="Input" height=140 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>PromptBar — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-col"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div', { style: { width: '100%', maxWidth: '640px' } }, h(S.PromptBar, { placeholder: 'Ask anything' })));
+</script>
+</body>
+</html>

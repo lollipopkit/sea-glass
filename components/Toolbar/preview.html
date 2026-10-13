@@ -1,0 +1,13 @@
+<!-- @dsCard group="Actions" height=520 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Toolbar — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-stage" style="min-height:440px;align-items:flex-end"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div', { style: { display: 'flex', gap: '12px', alignItems: 'center' } }, h(S.Toolbar, { 'aria-label': 'Photo actions', tone: 'lilac', items: [{ icon: 'share', label: 'Share' }, { icon: 'comment', label: 'Comment' }, { icon: 'download', label: 'Download' }, { icon: 'edit', label: 'Edit' }, { icon: 'more-vert', label: 'More' }], menuItems: [{ icon: 'link', label: 'Copy link' }, { icon: 'folder', label: 'Move to album' }, { icon: 'image', label: 'Use as wallpaper' }, { icon: 'settings', label: 'Details' }] }), h(S.Fab, { tone: 'coral', label: 'New' })));
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!-- @dsCard group="Surfaces" height=300 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>GlassCard — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-stage"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h('div', { style: { width: '300px' } }, h(S.GlassCard, { title: 'Summer trip', footer: [h(S.Chip, { key: 'a', tone: 'seafoam' }, '128 photos'), h(S.Chip, { key: 'b', tone: 'frost' }, 'Updated today')] }, 'Photos from the coast, sorted by place and day.')),
+    h('div', { style: { width: '300px' } }, h(S.GlassCard, { tone: 'aqua', title: 'Storage almost full', footer: h(S.Button, { tone: 'cobalt', size: 'sm' }, 'Manage storage') }, '14.2 GB of 15 GB used. Delete large videos or add space.'))));
+</script>
+</body>
+</html>

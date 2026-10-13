@@ -1,0 +1,17 @@
+<!-- @dsCard group="Data" height=200 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Meter — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-col" style="align-items:stretch;max-width:480px"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(S.Meter, { icon: 'image', label: 'Photos', value: 10.5, tone: 'cobalt' }),
+    h(S.Meter, { icon: 'folder', label: 'Files', value: 68.9, tone: 'lilac' }),
+    h(S.Meter, { icon: 'globe', label: 'Quota', value: 84.2, tone: 'seafoam' }),
+    h(S.Meter, { icon: 'folder', label: 'Backup', value: 96.4, tone: 'seafoam' })));
+</script>
+</body>
+</html>

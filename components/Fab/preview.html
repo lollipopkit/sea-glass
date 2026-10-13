@@ -1,0 +1,13 @@
+<!-- @dsCard group="Actions" height=180 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Fab — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-stage"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div', { style: { display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' } }, h(S.Fab, { tone: 'coral', label: 'New' }), h(S.Fab, { tone: 'lilac', label: 'New', size: 'lg' }), h(S.Fab, { tone: 'aqua', icon: 'edit' }, 'Compose'), h(S.Fab, { tone: 'aqua', icon: 'edit', size: 'lg' }, 'Compose')));
+</script>
+</body>
+</html>

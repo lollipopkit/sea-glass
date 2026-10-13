@@ -1,0 +1,19 @@
+<!-- @dsCard group="Actions" height=180 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>IconButton — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap"></head>
+<body>
+<div id="root" class="sg-stage"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(S.IconButton, { tone: 'coral', size: 'lg', monogram: 'S', label: 'Account' }),
+    h(S.IconButton, { tone: 'frost', icon: 'search', label: 'Search' }),
+    h(S.IconButton, { tone: 'aqua', icon: 'close', label: 'Close' }),
+    h('div', { className: 'sg-glass sg-tone-cobalt', style: { display: 'flex', gap: 'var(--space-1)', padding: 'var(--space-2)', borderRadius: 'var(--radius-pill)' } },
+      h(S.IconButton, { variant: 'bare', tone: 'cobalt', icon: 'mic', label: 'Dictate' }),
+      h(S.IconButton, { variant: 'inset', tone: 'cobalt', icon: 'wave', label: 'Start voice conversation' }))));
+</script>
+</body>
+</html>

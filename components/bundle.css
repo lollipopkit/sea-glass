@@ -1,0 +1,513 @@
+:root {
+  --sg-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='1 0 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+body { margin: 0; font-family: var(--font-sans); background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+/* Glass parameters. Every value below can be overridden on any element (it applies to that element and every glass
+   surface inside it) or on one component. Percentages are of the surface's own size unless noted; multipliers are
+   of --sg-rim (about a quarter of the control's height). */
+:root {
+  --sg-band-y: 48%;          /* middle band: vertical centre */
+  --sg-band-spread: 24%;     /* middle band: half height (fades to nothing this far above and below the centre) */
+  --sg-band-strength: 38%;   /* middle band: opacity */
+  --sg-band-depth: 16%;      /* middle band: share of *-ink in its colour (higher = deeper, more saturated) */
+  --sg-spot-strength: 40%;   /* two deeper spots in the band at random x positions: opacity (0% = symmetric) */
+  --sg-spot-width: 32%;      /* deeper spots: half width */
+  --sg-glow-start: 62%;      /* lower highlight: where it starts, from the top */
+  --sg-glow-mid: 50%;        /* lower highlight: opacity at 84% height; it reaches full *-glow at the bottom edge */
+  --sg-edge-glow: 85%;       /* soft *-glow rim all round the inside of the outline: opacity */
+  --sg-top-light: 20%;       /* faint light band under the top edge: opacity at 11% height */
+  --sg-top-line: 6%;         /* thin darker line along the top edge: share of *-ink */
+  --sg-shadow-y: 0.85;       /* gray shadow: offset below the shape, x --sg-rim */
+  --sg-shadow-blur: 0.15;    /* gray shadow: blur, x --sg-rim */
+  --sg-cast-light: 60%;      /* tinted light right under the shape: share of *-fill (the rest is shade) */
+  --sg-grain-reach: 0.7;     /* grain below the shape, into the cast light, x --sg-rim (0 = none) */
+  --sg-highlight-width: 1;   /* width of the lower rim and the all-round rim, x --sg-rim */
+  /* per-component multipliers, so a component can differ from the page while the page settings above still apply to it */
+  --sg-band-gain: 1;         /* x --sg-band-strength */
+  --sg-band-depth-gain: 1;   /* x --sg-band-depth */
+  --sg-glow-shift: 0%;       /* added to --sg-glow-start */
+  /* fleck grain, read by bundle.js when it draws the grain tiles (change them with SeaGlass.setGrain, or set them here
+     before bundle.js loads). They apply to the whole page. */
+  --sg-fleck-dark: 10;       /* dark flecks per 100 square CSS px */
+  --sg-fleck-light: 5;       /* light flecks per 100 square CSS px */
+  --sg-fleck-size: 1;        /* fleck size, x */
+  --sg-fleck-stretch: 1;     /* how long and thin the flecks are, x (1 = reference; 0.5 = rounder) */
+  --sg-fleck-dark-alpha: 1;  /* strength of dark flecks, x */
+  --sg-fleck-light-alpha: 1; /* strength of light flecks, x */
+}
+
+/* theme switch (class set by bundle.js for two frames): no transitions, so the new colours land in one frame */
+.sg-theme-switching *, .sg-theme-switching *::before, .sg-theme-switching *::after { transition: none !important; }
+
+/* tone: each glass surface reads its three colours from these */
+.sg-tone-seafoam { --sg-fill: var(--seafoam-fill); --sg-hi: var(--seafoam-hi); --sg-ink: var(--seafoam-ink); --sg-glow: var(--seafoam-glow); }
+.sg-tone-aqua    { --sg-fill: var(--aqua-fill);    --sg-hi: var(--aqua-hi);    --sg-ink: var(--aqua-ink); --sg-glow: var(--aqua-glow); }
+.sg-tone-cobalt  { --sg-fill: var(--cobalt-fill);  --sg-hi: var(--cobalt-hi);  --sg-ink: var(--cobalt-ink); --sg-glow: var(--cobalt-glow); }
+.sg-tone-lilac   { --sg-fill: var(--lilac-fill);   --sg-hi: var(--lilac-hi);   --sg-ink: var(--lilac-ink); --sg-glow: var(--lilac-glow); }
+.sg-tone-coral   { --sg-fill: var(--coral-fill);   --sg-hi: var(--coral-hi);   --sg-ink: var(--coral-ink); --sg-glow: var(--coral-glow); }
+.sg-tone-amber   { --sg-fill: var(--amber-fill);   --sg-hi: var(--amber-hi);   --sg-ink: var(--amber-ink); --sg-glow: var(--amber-glow); }
+.sg-tone-frost   { --sg-fill: var(--frost-fill);   --sg-hi: var(--frost-hi);   --sg-ink: var(--frost-ink); --sg-glow: var(--frost-glow); }
+
+/* the glass surface, modelled as a translucent pebble lit from above and profiled on the reference.
+   Every highlight is an inset shadow, so it follows the outline (straight sides and round ends alike):
+   - a soft rim of *-glow all round the inside of the outline
+   - a wider rim along the bottom that wraps up around the ends and thins as it rises
+   - a thin line at the bottom edge back toward *-fill, so the rim is brightest just inside the edge
+   - a thin darker line along the top edge, with a faint light band just below it
+   - below the shape: light tinted by the glass, then a gray offset shadow of the same shape */
+.sg-glass {
+  --sg-rim: 12px; /* width of the edge highlight, about a quarter of the height */
+  /* below the shape, both scaled with --sg-rim (so with the height): light tinted by the glass right under it,
+     then a gray copy of the shape about 0.21 of the height lower (14px under the 66px navigation bar, 12px under the 60px FAB in the reference; the 72px xl button sits higher, 23px) */
+  --sg-trans: 0 calc(var(--sg-rim) * 0.55) calc(var(--sg-rim) * 0.5) calc(var(--sg-rim) * -0.12) color-mix(in oklab, var(--sg-fill) var(--sg-cast-light), var(--shade));
+  --sg-drop: 0 calc(var(--sg-rim) * var(--sg-shadow-y)) calc(var(--sg-rim) * var(--sg-shadow-blur)) 0 var(--drop);
+  position: relative; isolation: isolate;
+  background-color: var(--sg-fill); color: var(--sg-ink);
+  /* body of the glass, top to bottom of the stack:
+     - two soft deeper bands across the middle (the glass is thicker there), centred at random x positions per surface
+       (--sg-band-x1/-x2, written by bundle.js) so no two surfaces and no two sides look the same
+     - the lower third rising to *-glow at the bottom edge
+     - a faint light band just under the top edge */
+  --sg-r: calc(var(--sg-rim) * var(--sg-highlight-width));
+  --sg-band-s: min(100%, calc(var(--sg-band-strength) * var(--sg-band-gain)));
+  --sg-glow-s: min(97%, calc(var(--sg-glow-start) + var(--sg-glow-shift)));
+  --sg-deep: color-mix(in oklch, var(--sg-fill), var(--sg-ink) min(100%, calc(var(--sg-band-depth) * var(--sg-band-depth-gain)))); /* oklch keeps the chroma, so the band reads deeper in colour, not grayer */
+  --sg-bg-layers:
+    radial-gradient(ellipse var(--sg-spot-width) var(--sg-band-spread) at var(--sg-band-x1, 38%) var(--sg-band-y), color-mix(in oklab, var(--sg-deep) var(--sg-spot-strength), transparent), transparent 100%),
+    radial-gradient(ellipse calc(var(--sg-spot-width) * 0.85) calc(var(--sg-band-spread) * 0.85) at var(--sg-band-x2, 66%) calc(var(--sg-band-y) + 4%), color-mix(in oklab, var(--sg-deep) calc(var(--sg-spot-strength) * 0.75), transparent), transparent 100%),
+    linear-gradient(to bottom, transparent calc(var(--sg-band-y) - var(--sg-band-spread)), color-mix(in oklab, var(--sg-deep) var(--sg-band-s), transparent) var(--sg-band-y), transparent calc(var(--sg-band-y) + var(--sg-band-spread))),
+    /* the thin darker line along the top edge and the slight fall-off along the bottom edge: drawn as one gradient,
+       not as inset shadows (every inset shadow costs about as much to rasterise as a blurred one) */
+    linear-gradient(to bottom, color-mix(in oklab, var(--sg-ink) var(--sg-top-line), transparent) 0, transparent 2px, transparent calc(100% - 2px), color-mix(in oklab, var(--sg-fill) 10%, transparent) 100%),
+    linear-gradient(to bottom, transparent var(--sg-glow-s), color-mix(in oklab, var(--sg-glow) var(--sg-glow-mid), transparent) 84%, var(--sg-glow) 98%),
+    linear-gradient(to bottom, color-mix(in oklab, var(--sg-hi) calc(var(--sg-top-light) / 2), transparent) 2%, color-mix(in oklab, var(--sg-hi) var(--sg-top-light), transparent) 11%, transparent 30%);
+  background-image: var(--sg-bg-layers);
+  box-shadow:
+    inset 0 calc(var(--sg-r) * -1.4) var(--sg-r) calc(var(--sg-r) * -0.35) var(--sg-glow),
+    inset 0 calc(var(--sg-r) * -0.45) calc(var(--sg-r) * 0.9) calc(var(--sg-r) * 0.12) color-mix(in oklab, var(--sg-glow) var(--sg-edge-glow), transparent),
+    var(--sg-trans),
+    var(--sg-drop),
+    var(--sg-halo, 0 0 0 0 transparent, 0 0 0 0 transparent);
+}
+.sg-glass::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background-image: var(--sg-grain); background-size: var(--sg-grain-size, 160px) var(--sg-grain-size, 160px); background-position: var(--sg-grain-pos, 0 0); opacity: min(1, calc(var(--opacity-grain) * 1.5)); /* the flecks are small, so the layer runs at 1.5x the token */
+}
+/* fleck grain (when bundle.js could draw it): the layer is the tone's ink, cut by a mask of all flecks; the light flecks
+   are painted white over it. So dark flecks take the colour of the tone, light flecks are white. The layer also reaches
+   below the shape into the light it throws, fading out there. */
+.sg-has-flecks .sg-glass::before, .sg-glass.sg-has-flecks::before {
+  bottom: calc(var(--sg-grain-below, calc(var(--sg-rim) * var(--sg-grain-reach))) * -1);
+  background-color: var(--sg-fleck, var(--sg-ink));
+  background-image: var(--sg-grain-light);
+  -webkit-mask-image: var(--sg-grain-mask), linear-gradient(to bottom, #000 calc(100% - var(--sg-grain-below, calc(var(--sg-rim) * var(--sg-grain-reach)))), rgba(0, 0, 0, 0.45) calc(100% - var(--sg-grain-below, calc(var(--sg-rim) * var(--sg-grain-reach))) + 2px), transparent);
+  mask-image: var(--sg-grain-mask), linear-gradient(to bottom, #000 calc(100% - var(--sg-grain-below, calc(var(--sg-rim) * var(--sg-grain-reach)))), rgba(0, 0, 0, 0.45) calc(100% - var(--sg-grain-below, calc(var(--sg-rim) * var(--sg-grain-reach))) + 2px), transparent);
+  -webkit-mask-size: var(--sg-grain-size) var(--sg-grain-size), 100% 100%; mask-size: var(--sg-grain-size) var(--sg-grain-size), 100% 100%;
+  -webkit-mask-position: var(--sg-grain-pos, 0 0), 0 0; mask-position: var(--sg-grain-pos, 0 0), 0 0;
+  -webkit-mask-repeat: repeat, no-repeat; mask-repeat: repeat, no-repeat;
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+}
+.sg-card, .sg-flat { --sg-grain-below: 0px; }
+/* dark themes: *-ink is light there, so the dark flecks and the middle band take a deep shade of the fill instead */
+.sg-dark-page .sg-glass { --sg-fleck: color-mix(in oklab, var(--sg-fill) 45%, #000);
+  /* and the middle band deepens toward black, not toward the light ink */
+  --sg-deep: color-mix(in oklch, var(--sg-fill), #000 min(100%, calc(var(--sg-band-depth) * var(--sg-band-depth-gain) * 0.9))); }
+.sg-flat { box-shadow:
+    inset 0 -5px 6px -3px var(--sg-glow),
+    inset 0 0 5px 0 color-mix(in oklab, var(--sg-glow) 80%, transparent),
+    0 2px 2px -1px color-mix(in oklab, var(--sg-fill) 50%, var(--shade)),
+    var(--shadow-rest),
+    var(--sg-halo, 0 0 0 0 transparent, 0 0 0 0 transparent); }
+
+/* focus: no dark outline. A 2px ring in a mid shade of the control's own tone (58% *-ink into *-fill,
+   at least 3:1 on paper) right on the edge, and a soft halo of the tone around it; both fade in */
+.sg-focusable { outline: none; }
+.sg-focusable:not(.sg-glass):focus-visible { box-shadow: var(--sg-halo); }
+.sg-focusable:focus-visible { --sg-halo: 0 0 0 2px var(--sg-ring), 0 0 10px 5px color-mix(in oklab, var(--sg-fill, var(--focus)) 70%, transparent); }
+.sg-tone-seafoam, .sg-tone-aqua, .sg-tone-cobalt, .sg-tone-lilac, .sg-tone-coral, .sg-tone-amber, .sg-tone-frost { --sg-ring: color-mix(in oklab, var(--sg-ink) 58%, var(--sg-fill)); }
+.sg-icon { display: block; flex: none; }
+
+/* Button */
+.sg-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
+  height: var(--space-12); padding: 0 var(--space-6); border: 0; border-radius: var(--radius-pill);
+  font: inherit; font-size: 17px; line-height: 22px; font-weight: 500; cursor: pointer;
+  transition: filter .2s ease, box-shadow .3s ease;
+}
+.sg-btn.sg-size-lg { height: var(--space-16); padding: 0 var(--space-8); --sg-rim: 16px; }
+.sg-btn.sg-size-sm { --sg-rim: 9px; height: 36px; padding: 0 var(--space-4); font-size: 15px; gap: var(--space-2); }
+.sg-btn:active, .sg-iconbtn.sg-v-glass:active { filter: brightness(1.04); }
+@media (prefers-reduced-motion: reduce) { .sg-btn, .sg-iconbtn { transition: none; } }
+.sg-btn:disabled, .sg-iconbtn:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; transform: none; }
+
+/* IconButton */
+.sg-iconbtn {
+  display: inline-grid; place-items: center; width: var(--space-12); height: var(--space-12); padding: 0;
+  border: 0; border-radius: var(--radius-pill); font: inherit; cursor: pointer; color: var(--sg-ink);
+  background-color: transparent;
+}
+.sg-iconbtn.sg-size-sm { width: 36px; height: 36px; --sg-rim: 9px; }
+.sg-iconbtn.sg-size-lg { width: 96px; height: 96px; --sg-rim: 22px; }
+.sg-iconbtn.sg-size-lg .sg-mono { font-size: 70px; }
+.sg-iconbtn.sg-v-glass { background-color: var(--sg-fill);
+  --sg-trans: 0 calc(var(--sg-rim) * 0.55) calc(var(--sg-rim) * 0.5) calc(var(--sg-rim) * -0.12) color-mix(in oklab, var(--sg-fill) var(--sg-cast-light), var(--shade));
+  --sg-drop: 0 calc(var(--sg-rim) * var(--sg-shadow-y)) calc(var(--sg-rim) * var(--sg-shadow-blur)) 0 var(--drop);
+  box-shadow:
+    inset 0 calc(var(--sg-r) * -1.4) var(--sg-r) calc(var(--sg-r) * -0.35) var(--sg-glow),
+    inset 0 calc(var(--sg-r) * -0.45) calc(var(--sg-r) * 0.9) calc(var(--sg-r) * 0.12) color-mix(in oklab, var(--sg-glow) var(--sg-edge-glow), transparent),
+    var(--sg-trans),
+    var(--sg-drop),
+    var(--sg-halo, 0 0 0 0 transparent, 0 0 0 0 transparent); }
+.sg-iconbtn .sg-mono { font-size: 35px; font-weight: 700; line-height: 1; }
+.sg-iconbtn.sg-size-sm .sg-mono { font-size: 26px; }
+.sg-iconbtn.sg-v-inset { --sg-inset: color-mix(in oklab, var(--sg-fill) 50%, var(--sg-hi));
+  background-color: var(--sg-inset);
+  background-image: linear-gradient(to bottom, color-mix(in oklab, var(--sg-hi) 45%, transparent), transparent 35%, transparent 65%, color-mix(in oklab, var(--sg-hi) 50%, transparent));
+  box-shadow: 0 0 5px 1px color-mix(in oklab, var(--sg-inset) 85%, transparent); }
+
+/* SegmentedNav */
+.sg-seg { display: inline-flex; align-items: center; gap: var(--space-1); padding: 5px; border-radius: var(--radius-pill); }
+.sg-seg-item {
+  display: inline-flex; align-items: center; gap: var(--space-2); height: 38px; padding: 0 var(--space-4);
+  border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--sg-ink);
+  font: inherit; font-size: 15px; line-height: 20px; font-weight: 500; cursor: pointer;
+}
+/* selected: one half-transparent *-hi pill that slides between items (bundle.js moves it), so the bar's grain and
+   colour show through (reference: #c8dcfa on a #a7bffb bar) */
+.sg-seg-ind {
+  position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; border-radius: var(--radius-pill);
+  background-color: color-mix(in oklab, var(--sg-hi) 50%, transparent);
+  box-shadow: 0 0 5px 1px color-mix(in oklab, var(--sg-hi) 40%, transparent);
+  transform-origin: 50% 50%; transition: opacity .2s ease;
+}
+.sg-seg-item { position: relative; z-index: 1; }
+/* the icon opens on the selected item: its width, the gap after it, its opacity and scale ease in together, so the
+   label slides over instead of jumping */
+.sg-seg-item.has-icon { gap: 0; }
+.sg-seg-icon {
+  --sg-seg-isz: 22px;
+  display: inline-grid; place-items: center; width: 0; margin-right: 0; opacity: 0; transform: scale(.4); overflow: hidden;
+  transition: width .38s cubic-bezier(.3, 1.3, .5, 1), margin-right .38s cubic-bezier(.3, 1.3, .5, 1), opacity .22s ease, transform .38s cubic-bezier(.3, 1.5, .5, 1);
+}
+.sg-seg-item[aria-selected="true"] .sg-seg-icon { width: var(--sg-seg-isz); margin-right: var(--space-2); opacity: 1; transform: none; transition-delay: .04s; }
+.sg-seg.sg-size-lg .sg-seg-icon { --sg-seg-isz: 24px; }
+.sg-seg.sg-size-lg .sg-seg-item[aria-selected="true"] .sg-seg-icon { margin-right: 6px; }
+@media (prefers-reduced-motion: reduce) { .sg-seg-icon { transition-duration: .01s; } }
+
+/* PromptBar */
+.sg-prompt { --sg-rim: 16px; display: flex; align-items: center; gap: var(--space-1); height: var(--space-16); padding: 0 var(--space-2); border-radius: var(--radius-pill); }
+.sg-prompt-input {
+  flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--sg-ink);
+  font: inherit; font-size: 17px; line-height: 22px; font-weight: 500; padding: 0 var(--space-2);
+}
+.sg-prompt-input::placeholder { color: var(--sg-ink); opacity: 1; }
+.sg-prompt-input:focus { outline: none; }
+.sg-prompt { transition: background-color .3s ease, box-shadow .35s ease; }
+.sg-prompt:focus-within { background-color: color-mix(in oklab, var(--sg-fill) 80%, var(--sg-hi));
+  /* lit from above: no dark line along the top while focused; the ring sits low (1px on the sides, ~2.5px at the
+     bottom, none along the top) and the soft halo stays */
+  --sg-top-line: 0%;
+  --sg-halo: 0 1.5px 0 1px var(--sg-ring), 0 0 12px 6px color-mix(in oklab, var(--sg-fill) 70%, transparent); }
+.sg-prompt-input { caret-color: var(--sg-ink); }
+
+/* Chip */
+.sg-chip {
+  display: inline-flex; align-items: center; gap: var(--space-1); height: 28px; padding: 0 var(--space-3);
+  border: 0; border-radius: var(--radius-pill); font: inherit; font-size: 13px; line-height: 18px; font-weight: 500; letter-spacing: .01em;
+}
+button.sg-chip { cursor: pointer; }
+.sg-chip[aria-pressed="true"] { background-color: var(--sg-hi); }
+
+/* GlassCard */
+.sg-card { --sg-rim: 16px; --sg-trans: 0 4px 3px -1px color-mix(in oklab, var(--sg-fill) 50%, var(--shade)); --sg-drop: var(--shadow-float); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+.sg-card-title { margin: 0; font-size: 20px; line-height: 26px; font-weight: 600; }
+.sg-card-body { font-size: 16px; line-height: 24px; }
+.sg-card-foot { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); }
+
+/* preview helpers */
+.sg-stage { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6); padding: var(--space-8); }
+.sg-col { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-6); padding: var(--space-8); }
+
+/* Meter */
+.sg-meter { display: flex; align-items: center; gap: var(--space-3); min-width: 0; font-size: 15px; line-height: 20px; font-weight: 500; }
+.sg-meter-icon { color: var(--ink-muted); }
+.sg-meter-label { flex: none; min-width: 4em; color: var(--ink); }
+.sg-meter-track { flex: 1; min-width: 40px; height: 8px; border-radius: var(--radius-pill); background: var(--sg-fill); overflow: hidden; }
+.sg-meter-bar { height: 100%; border-radius: var(--radius-pill); background: var(--sg-ink); }
+.sg-meter-value { flex: none; min-width: 4.2em; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+
+/* Sparkline */
+.sg-spark { display: block; overflow: visible; }
+.sg-spark-line { fill: none; stroke: var(--sg-ink); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.sg-spark-area { fill: var(--sg-fill); opacity: .7; stroke: none; }
+.sg-btn, .sg-chip, .sg-seg-item, .sg-meter-label, .sg-meter-value { white-space: nowrap; }
+
+/* Google Sans Flex sets wider at small optical sizes; tighten control labels slightly (buttons do not inherit letter-spacing) */
+.sg-btn, .sg-seg-item, .sg-prompt-input { letter-spacing: -0.02em; }
+
+/* Slider: a native range input. Track in *-fill with the filled part in *-ink; the thumb is a dark glass bead in *-ink */
+.sg-slider { display: flex; align-items: center; gap: var(--space-3); min-width: 0; font-size: 15px; line-height: 20px; font-weight: 500; }
+.sg-slider-label { flex: none; color: var(--ink); }
+.sg-slider-value { flex: none; min-width: 2.8em; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+.sg-slider-input {
+  -webkit-appearance: none; appearance: none; flex: 1; min-width: 96px; height: 28px; margin: 0;
+  background: transparent; cursor: pointer; --sg-pct: 50%;
+}
+.sg-slider-input::-webkit-slider-runnable-track {
+  height: 8px; border-radius: var(--radius-pill);
+  background: linear-gradient(to right, var(--sg-ink) 0 var(--sg-pct), var(--sg-fill) var(--sg-pct) 100%);
+  box-shadow: inset 0 1px 1.5px color-mix(in oklab, var(--sg-ink) 22%, transparent);
+}
+.sg-slider-input::-moz-range-track { height: 8px; border-radius: var(--radius-pill); background: var(--sg-fill); box-shadow: inset 0 1px 1.5px color-mix(in oklab, var(--sg-ink) 22%, transparent); }
+.sg-slider-input::-moz-range-progress { height: 8px; border-radius: var(--radius-pill); background: var(--sg-ink); }
+.sg-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 22px; height: 22px; margin-top: -7px; border: 0; border-radius: 50%;
+  background: var(--sg-ink);
+  box-shadow:
+    inset 0 2px 2px -1px rgba(255, 255, 255, 0.28),
+    inset 0 -5px 6px -3px color-mix(in oklab, var(--sg-ink) 55%, #fff),
+    0 4px 3px -1px rgba(0, 0, 0, 0.22);
+  transition: transform .45s cubic-bezier(.25, 1.9, .4, 1), box-shadow .25s ease;
+}
+.sg-slider-input::-moz-range-thumb {
+  width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--sg-ink);
+  box-shadow: inset 0 2px 2px -1px rgba(255, 255, 255, 0.28), inset 0 -5px 6px -3px color-mix(in oklab, var(--sg-ink) 55%, #fff), 0 4px 3px -1px rgba(0, 0, 0, 0.22);
+}
+.sg-slider-input:active::-webkit-slider-thumb { transform: scale(1.18, 0.86); transition-duration: .18s; }
+.sg-slider-input:active::-moz-range-thumb { transform: scale(1.18, 0.86); }
+.sg-slider-input:focus { outline: none; }
+.sg-slider-input:focus-visible::-webkit-slider-thumb { box-shadow: inset 0 2px 2px -1px rgba(255, 255, 255, 0.28), inset 0 -5px 6px -3px color-mix(in oklab, var(--sg-ink) 55%, #fff), 0 0 0 3px color-mix(in oklab, var(--sg-fill) 85%, transparent), 0 0 10px 5px color-mix(in oklab, var(--sg-fill) 70%, transparent), 0 4px 3px -1px rgba(0, 0, 0, 0.22); }
+.sg-slider-input:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px color-mix(in oklab, var(--sg-fill) 85%, transparent), 0 0 10px 5px color-mix(in oklab, var(--sg-fill) 70%, transparent); }
+.sg-slider.is-disabled { opacity: var(--opacity-disabled); }
+.sg-slider.is-disabled .sg-slider-input { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) { .sg-slider-input::-webkit-slider-thumb { transition: none; } }
+
+/* Hover and press light, on every glass surface and every .sg-spot element:
+   a soft *-hi glow centred on the pointer (--sg-mx/--sg-my, written by bundle.js). Hover fades it in;
+   a press (.is-pressed, set by bundle.js) widens it from 46px to 90px and brightens it, then it shrinks and fades
+   on release. The base of a control also lifts toward *-hi on hover. Hover only where the device can hover. */
+@property --sg-spot-r { syntax: '<length>'; inherits: false; initial-value: 46px; }
+@property --sg-spot-a { syntax: '<percentage>'; inherits: false; initial-value: 88%; }
+/* the pointer position does not inherit: moving the pointer then changes the style of the surface alone, not of its
+   grain and rim layers or of anything inside it, so nothing else repaints. The ::after light of surfaces without a
+   rim mask (and of .sg-spot elements) takes it explicitly. */
+@property --sg-mx { syntax: '<length-percentage>'; inherits: false; initial-value: 50%; }
+@property --sg-my { syntax: '<length-percentage>'; inherits: false; initial-value: 50%; }
+.sg-spot:not(.sg-rimmed)::after, .sg-glass:not(.sg-rimmed)::after { --sg-mx: inherit; --sg-my: inherit; }
+@property --sg-spot-o { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --sg-rim-a { syntax: '<percentage>'; inherits: false; initial-value: 100%; }
+.sg-spot, .sg-glass { --sg-mx: 50%; --sg-my: 50%; }
+.sg-seg-item.sg-spot, .sg-iconbtn.sg-v-bare { position: relative; isolation: isolate; }
+.sg-spot::after, .sg-glass::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  --sg-spot-r: 46px; --sg-spot-a: 88%;
+  background: radial-gradient(circle var(--sg-spot-r) at var(--sg-mx) var(--sg-my), color-mix(in oklab, var(--sg-hi) var(--sg-spot-a), transparent), color-mix(in oklab, var(--sg-hi) 0%, transparent) 100%);
+  opacity: 0; transition: opacity .3s ease, --sg-spot-r .5s cubic-bezier(.2, .8, .2, 1), --sg-spot-a .35s ease;
+}
+.sg-card::after { --sg-spot-r: 90px; --sg-spot-a: 55%; }
+.is-pressed:not(.sg-rimmed)::after { will-change: opacity; }
+.is-pressed::after { opacity: 1; --sg-spot-r: 90px; --sg-spot-a: 100%; transition: opacity .12s ease, --sg-spot-r .28s cubic-bezier(.2, .8, .2, 1), --sg-spot-a .15s ease; }
+.sg-card.is-pressed::after { --sg-spot-r: 160px; --sg-spot-a: 75%; }
+.sg-btn, .sg-seg-item, .sg-chip, .sg-iconbtn { transition: background-color .28s ease, filter .2s ease, box-shadow .3s ease; }
+@media (hover: hover) {
+  .sg-spot:hover::after, .sg-glass:hover::after { opacity: 1; }
+  .sg-spot:not(.sg-rimmed):hover::after, .sg-glass:not(.sg-rimmed):hover::after { will-change: opacity; }   /* own compositor layer while hovered: moving the light repaints only this layer, not the surface's shadows and grain */
+  .sg-btn:hover:not(:disabled), button.sg-chip:hover, .sg-iconbtn.sg-v-glass:hover:not(:disabled) { background-color: color-mix(in oklab, var(--sg-fill) 70%, var(--sg-hi)); }
+  .sg-iconbtn.sg-v-bare:hover:not(:disabled) { background-color: color-mix(in oklab, var(--sg-hi) 35%, transparent); }
+  .sg-seg-item:hover:not([aria-selected="true"]) { background-color: color-mix(in oklab, var(--sg-hi) 30%, transparent); }
+  .sg-seg-item[aria-selected="true"]:not(.is-pressed)::after, .sg-btn:disabled::after, .sg-iconbtn:disabled::after { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .sg-spot::after, .sg-glass::after { transition-duration: .01s; } .sg-prompt { transition-duration: .01s; } }
+
+.sg-jelly, .sg-glass { touch-action: manipulation; }
+
+/* ScrollArea / .sg-scroll: glass scrollbars. The thumb is a frosted pill in the tone's *-fill with a *-glow rim,
+   inset from the edge; it darkens toward *-ink on hover and while dragged. Track is clear. */
+.sg-scroll { overflow: auto; overscroll-behavior: contain; }
+/* Chromium 121+ ignores ::-webkit-scrollbar once the standard properties are set, so those go only to browsers
+   without ::-webkit-scrollbar (Firefox) */
+@supports not selector(::-webkit-scrollbar) {
+  .sg-scroll { scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--sg-ink, var(--ink-muted)) 45%, var(--sg-fill, var(--line))) transparent; }
+}
+.sg-scroll::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.sg-scroll::-webkit-scrollbar { width: 14px; height: 14px; }
+.sg-scroll::-webkit-scrollbar-track { background: transparent; }
+.sg-scroll::-webkit-scrollbar-corner { background: transparent; }
+.sg-scroll::-webkit-scrollbar-thumb {
+  border: 4px solid transparent; background-clip: padding-box; border-radius: var(--radius-pill); min-height: 40px; min-width: 40px;
+  background-color: color-mix(in oklab, var(--sg-ink, var(--ink-muted)) 32%, var(--sg-fill, var(--line)));
+  box-shadow: inset 0 -3px 4px -2px color-mix(in oklab, var(--sg-glow, #fff) 70%, transparent), inset 0 1px 1px -0.5px rgba(0, 0, 0, 0.06);
+}
+.sg-scroll::-webkit-scrollbar-thumb:hover { border-width: 3px; background-color: color-mix(in oklab, var(--sg-ink, var(--ink-muted)) 50%, var(--sg-fill, var(--line))); }
+.sg-scroll::-webkit-scrollbar-thumb:active { border-width: 3px; background-color: color-mix(in oklab, var(--sg-ink, var(--ink-muted)) 65%, var(--sg-fill, var(--line))); }
+.sg-scrollarea { position: relative; border-radius: var(--radius-lg); }
+.sg-scrollarea:focus-visible { outline: none; --sg-halo: 0 0 0 2px var(--sg-ring, var(--focus)), 0 0 10px 5px color-mix(in oklab, var(--sg-fill, var(--focus)) 70%, transparent); box-shadow: var(--sg-halo); }
+
+/* Toolbar */
+.sg-toolbar { --sg-rim: 14px; display: inline-flex; align-items: center; gap: var(--space-2); height: 60px; padding: 0 var(--space-2); border-radius: var(--radius-pill); box-sizing: border-box; }
+/* Toolbar menu: the wrapper keeps the closed toolbar's size in the layout while the panel is open */
+.sg-tb-wrap { position: relative; display: inline-block; vertical-align: middle; }
+.sg-tb-btn { color: var(--sg-ink); }
+.sg-tb-icon { display: grid; place-items: center; flex: none; }
+.sg-tb-label { display: none; }
+.sg-toolbar.is-open {
+  position: absolute; left: 0; z-index: 30; flex-direction: column; align-items: stretch; height: auto; width: max-content;
+  min-width: 232px; padding: var(--space-2); gap: 2px; border-radius: 24px; --sg-rim: 16px; overflow: hidden;
+}
+/* the content is pinned to the side the panel grows from, so the rows stay put while its size animates */
+.sg-toolbar.is-open.is-up { bottom: 0; justify-content: flex-end; }
+.sg-toolbar.is-open.is-down { top: 0; justify-content: flex-start; }
+.sg-toolbar.is-open.is-right { left: auto; right: 0; align-items: flex-end; }
+.sg-toolbar.is-open:not(.is-right) { align-items: flex-start; }
+.sg-toolbar.is-open .sg-tb-btn:not(.sg-tb-more), .sg-toolbar.is-open .sg-tb-menu, .sg-toolbar.is-open .sg-tb-sep { width: var(--tb-row-w, auto); box-sizing: border-box; }
+.sg-toolbar.is-open .sg-tb-sep { width: calc(var(--tb-row-w, 100%) - 2 * var(--space-3)); }
+.sg-toolbar.is-open:not(.is-right) .sg-tb-more { margin-left: calc(var(--tb-row-w, 44px) - 44px); }   /* a fixed offset from the left, so it does not slide with the animating width */
+.sg-toolbar.is-open .sg-tb-btn {
+  display: flex; align-items: center; justify-content: flex-start; gap: var(--space-3); width: auto; height: 44px; flex: none;
+  padding: 0 var(--space-4) 0 var(--space-3); border-radius: 14px; font-size: 15px; line-height: 20px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; text-align: left;
+}
+.sg-toolbar.is-open .sg-tb-label { display: inline; }
+.sg-toolbar.is-open .sg-tb-more { width: 44px; padding: 0; justify-content: center; border-radius: 50%; }
+.sg-toolbar.is-open .sg-tb-more .sg-tb-label { display: none; }
+.sg-tb-menu { display: flex; flex-direction: column; gap: 2px; }
+.sg-tb-sep { flex: none; height: 1px; margin: 4px var(--space-3); background: color-mix(in oklab, var(--sg-ink) 16%, transparent); }
+@media (hover: hover) { .sg-toolbar.is-open .sg-tb-btn:hover:not(:disabled) { background-color: color-mix(in oklab, var(--sg-hi) 45%, transparent); } }
+.sg-toolbar.is-open .sg-tb-btn:focus-visible { --sg-halo: inset 0 0 0 2px var(--sg-ring); background-color: color-mix(in oklab, var(--sg-hi) 45%, transparent); }
+
+/* Fab: a thicker piece of glass. Its middle band is narrower and deeper than on other surfaces and spans the full
+   width (measured on the reference: band centre at 46% height, about 8% darker than the top, shifted toward blue). */
+.sg-fab { --sg-band-gain: 1.55; --sg-band-depth-gain: 1.5; --sg-glow-shift: 8%; }
+/* Fab: rounded square, 60px with 17px corners (about 28% of the side, measured on the reference); the extended form keeps the height and adds a label */
+.sg-fab {
+  --sg-rim: 14px;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
+  width: 60px; height: 60px; padding: 0; border: 0; border-radius: 17px; cursor: pointer;
+  font: inherit; font-size: 17px; line-height: 22px; font-weight: 500; letter-spacing: -0.02em; white-space: nowrap;
+  transition: background-color .28s ease, filter .2s ease, box-shadow .3s ease;
+}
+.sg-fab.sg-size-lg { --sg-rim: 22px; width: 96px; height: 96px; border-radius: 28px; }
+.sg-fab.sg-fab-ext { width: auto; border-radius: 18px; padding: 0 var(--space-6) 0 var(--space-4); }
+.sg-fab.sg-fab-ext.sg-size-lg { height: 72px; border-radius: 21px; padding: 0 var(--space-8) 0 var(--space-6); font-size: 20px; gap: var(--space-4); }
+.sg-fab:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+@media (hover: hover) { .sg-fab:hover:not(:disabled) { background-color: color-mix(in oklab, var(--sg-fill) 70%, var(--sg-hi)); } }
+
+/* SwatchPicker: every disc derives its glass colours from --sg-swatch */
+.sg-swatches { display: inline-flex; align-items: center; gap: var(--space-4); }
+.sg-swatch {
+  --sg-rim: 12px;
+  --sg-fill: var(--sg-swatch);
+  --sg-hi: color-mix(in oklab, var(--sg-swatch) 45%, #fff);
+  --sg-glow: color-mix(in oklab, var(--sg-swatch) 55%, #fffbe8);
+  --sg-ink: color-mix(in oklab, var(--sg-swatch) 35%, #2a2016);
+  --sg-ring: color-mix(in oklab, var(--sg-swatch) 45%, #2a2016);
+  display: inline-grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  transition: background-color .28s ease, box-shadow .3s ease;
+}
+.sg-swatches.sg-size-lg .sg-swatch { --sg-rim: 22px; width: 96px; height: 96px; }
+.sg-swatch[aria-checked="true"] { --sg-halo: 0 0 0 2.5px var(--paper), 0 0 0 4.5px var(--sg-ring); }
+.sg-swatch[aria-checked="true"]:focus-visible { --sg-halo: 0 0 0 2.5px var(--paper), 0 0 0 4.5px var(--sg-ring), 0 0 12px 7px color-mix(in oklab, var(--sg-swatch) 60%, transparent); }
+
+/* Button, extra large: a wide pill for a single primary action (for example ending a call). Icon-only buttons
+   take a fixed width per size and need a label */
+.sg-btn.sg-size-xl { --sg-rim: 19px; --sg-drop: 0 calc(var(--sg-rim) * var(--sg-shadow-y) * 1.4) calc(var(--sg-rim) * var(--sg-shadow-blur)) 0 var(--drop); /* the wide pill sits higher: shadow 23px below (reference) */ height: 72px; padding: 0 var(--space-8); font-size: 20px; gap: var(--space-4); }
+.sg-btn.sg-btn-icon { padding: 0; width: 80px; }
+.sg-btn.sg-btn-icon.sg-size-sm { width: 56px; }
+.sg-btn.sg-btn-icon.sg-size-lg { width: 120px; }
+.sg-btn.sg-btn-icon.sg-size-xl { width: 180px; }
+
+/* SegmentedNav, large: 66px bar, 50px items, 20px labels */
+.sg-seg.sg-size-lg { --sg-rim: 16px; padding: 8px; gap: var(--space-2); }
+.sg-seg.sg-size-lg .sg-seg-item { height: 50px; padding: 0 16px 0 14px; font-size: 20px; line-height: 26px; }
+
+/* ToggleButton: a 88 x 68 face with the label below. Off: a flat pill in surface colour, no glass, no shadow, no grain.
+   On: a glass rounded square (radius 16px, about 22% of the height, measured on the reference) in the tone.
+   The shadow list keeps the same length and inset order in both states (two insets, cast light, drop, halo) so it interpolates. */
+.sg-toggle {
+  display: inline-flex; flex-direction: column; align-items: center; gap: var(--space-2);
+  padding: 0; border: 0; background: none; font: inherit; color: color-mix(in oklab, var(--ink-muted) 78%, #808080); cursor: pointer; /* neutral gray label (reference #626970) */
+  border-radius: 22px; -webkit-tap-highlight-color: transparent;
+}
+.sg-toggle-face {
+  --sg-rim: 15px;
+  display: grid; place-items: center; width: 88px; height: 68px; border-radius: 34px;
+  transition: border-radius .45s cubic-bezier(.3, 1.35, .45, 1), background-color .35s ease, color .35s ease, box-shadow .4s ease;
+}
+.sg-toggle-face::before { transition: opacity .35s ease; }
+.sg-toggle:not(.is-on) .sg-toggle-face {
+  --sg-fill: color-mix(in oklab, var(--surface) 96%, var(--cobalt-fill)); --sg-hi: color-mix(in oklab, var(--ink) 7%, var(--surface)); --sg-ink: var(--ink);
+  background-image: none;
+  box-shadow: inset 0 0 0 0 transparent, inset 0 0 0 0 transparent,
+    0 0 0 0 transparent, 0 0 0 0 transparent, var(--sg-halo, 0 0 0 0 transparent, 0 0 0 0 transparent);
+}
+.sg-toggle:not(.is-on) .sg-toggle-face::before { opacity: 0; }
+.sg-toggle.is-on .sg-toggle-face { border-radius: 16px; }
+.sg-toggle-label { position: relative; z-index: 1; font-size: 16px; line-height: 20px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; }
+.sg-toggle.sg-size-sm .sg-toggle-face { --sg-rim: 11px; width: 64px; height: 48px; border-radius: 24px; }
+.sg-toggle.sg-size-sm.is-on .sg-toggle-face { border-radius: 12px; }
+.sg-toggle.sg-size-sm .sg-toggle-label { font-size: 13px; line-height: 16px; }
+.sg-toggle:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+/* focus: ring and halo on the face, in the tone when on and in ink-muted when off */
+.sg-toggle:focus-visible { box-shadow: none; }
+.sg-toggle:focus-visible .sg-toggle-face { --sg-halo: 0 0 0 2px var(--sg-ring), 0 0 10px 5px color-mix(in oklab, var(--sg-fill) 70%, transparent); }
+.sg-toggle:not(.is-on):focus-visible .sg-toggle-face { --sg-ring: var(--ink-muted); --sg-halo: 0 0 0 2px var(--sg-ring), 0 0 10px 5px color-mix(in oklab, var(--ink) 10%, transparent); }
+@media (hover: hover) {
+  .sg-toggle:not(.is-on):hover:not(:disabled) .sg-toggle-face { background-color: color-mix(in oklab, var(--ink) 5%, var(--sg-fill)); }
+  .sg-toggle.is-on:hover:not(:disabled) .sg-toggle-face { background-color: color-mix(in oklab, var(--sg-fill) 70%, var(--sg-hi)); }
+  .sg-toggle:disabled .sg-toggle-face::after { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .sg-toggle-face, .sg-toggle-face::before { transition-duration: .01s; } }
+
+/* MenuPanel: a glass menu that grows out of the control that opened it (placed by bundle.js over that control) */
+.sg-toggle-wrap { position: relative; display: inline-flex; vertical-align: top; }
+.sg-menu {
+  --sg-rim: 14px; --sg-grain-below: 0px;
+  position: absolute; z-index: 40; display: flex; flex-direction: column; gap: 2px; min-width: 216px; width: max-content;
+  padding: var(--space-2); border-radius: 22px; overflow: hidden; box-sizing: border-box;
+}
+.sg-menu.is-up { justify-content: flex-end; }
+.sg-menu-item {
+  display: flex; align-items: center; gap: var(--space-3); height: 44px; flex: none; padding: 0 var(--space-4) 0 var(--space-3);
+  border: 0; border-radius: 14px; background: transparent; color: var(--sg-ink); font: inherit; font-size: 15px; line-height: 20px; font-weight: 500;
+  letter-spacing: -0.01em; white-space: nowrap; text-align: left; cursor: pointer; transition: background-color .2s ease;
+}
+.sg-menu-noicon { width: 22px; flex: none; }
+.sg-menu-item:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+@media (hover: hover) { .sg-menu-item:hover:not(:disabled) { background-color: color-mix(in oklab, var(--sg-hi) 55%, transparent); } }
+.sg-menu-item:focus-visible { --sg-halo: inset 0 0 0 2px var(--sg-ring); background-color: color-mix(in oklab, var(--sg-hi) 55%, transparent); }
+
+/* Rim mask (set by bundle.js once a surface's mask is ready; until then the inset shadows above draw the rim).
+   The two inset shadows give way to the ::after layer, which paints *-glow through the rim mask. The pointer light
+   moves to the surface's own background (its first layer), faded with --sg-spot-o: moving it repaints only the
+   surface's background; its grain (::before) and rim (::after) do not see the pointer position and stay as painted.
+   These rules come last so they win over the component rules of the same specificity. */
+.sg-glass.sg-rimmed {
+  --sg-spot-o: 0;
+  box-shadow: var(--sg-trans), var(--sg-drop), var(--sg-halo, 0 0 0 0 transparent, 0 0 0 0 transparent);
+  background-image: radial-gradient(circle var(--sg-spot-r) at var(--sg-mx) var(--sg-my), color-mix(in oklab, var(--sg-hi) calc(var(--sg-spot-a) * var(--sg-spot-o)), transparent), color-mix(in oklab, var(--sg-hi) 0%, transparent) 100%), var(--sg-bg-layers);
+  transition: background-color .28s ease, filter .2s ease, box-shadow .3s ease, color .35s ease, border-radius .45s cubic-bezier(.3, 1.35, .45, 1),
+    --sg-spot-o .3s ease, --sg-spot-r .5s cubic-bezier(.2, .8, .2, 1), --sg-spot-a .35s ease;
+}
+.sg-flat.sg-rimmed { box-shadow: 0 2px 2px -1px color-mix(in oklab, var(--sg-fill) 50%, var(--shade)), var(--shadow-rest), var(--sg-halo, 0 0 0 0 transparent, 0 0 0 0 transparent); }
+.sg-toggle:not(.is-on) .sg-toggle-face.sg-rimmed { box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent, var(--sg-halo, 0 0 0 0 transparent, 0 0 0 0 transparent); }
+.sg-card.sg-rimmed { --sg-spot-r: 90px; --sg-spot-a: 55%; }
+.sg-glass.sg-rimmed.is-pressed { --sg-spot-o: 1; --sg-spot-r: 90px; --sg-spot-a: 100%;
+  transition: background-color .28s ease, filter .2s ease, box-shadow .3s ease, color .35s ease, border-radius .45s cubic-bezier(.3, 1.35, .45, 1),
+    --sg-spot-o .12s ease, --sg-spot-r .28s cubic-bezier(.2, .8, .2, 1), --sg-spot-a .15s ease; }
+.sg-card.sg-rimmed.is-pressed { --sg-spot-r: 160px; --sg-spot-a: 75%; }
+.sg-glass.sg-rimmed::after {
+  z-index: -2; opacity: 1; --sg-rim-a: 100%;
+  background: color-mix(in oklab, var(--sg-glow) var(--sg-rim-a), transparent);
+  -webkit-mask: var(--sg-rim-mask) 0 0 / 100% 100% no-repeat; mask: var(--sg-rim-mask) 0 0 / 100% 100% no-repeat;
+  transition: --sg-rim-a .35s ease;
+}
+.sg-glass.sg-rimmed.sg-rim9::after { -webkit-mask: none; mask: none; -webkit-mask-box-image: var(--sg-rim-box); }
+@media (hover: hover) {
+  .sg-glass.sg-rimmed:hover { --sg-spot-o: 1; }
+  .sg-btn.sg-rimmed:disabled, .sg-iconbtn.sg-rimmed:disabled { --sg-spot-o: 0; }
+}
+.sg-toggle:not(.is-on) .sg-toggle-face.sg-rimmed::after { --sg-rim-a: 0%; }
+.sg-glass.sg-hot::before, .sg-glass.sg-hot.sg-rimmed::after, .sg-glass.is-pressed::before, .sg-glass.sg-rimmed.is-pressed::after { will-change: transform; }
+/* the hovered surface itself too, so a press that follows starts its transform on a layer that already exists */
+.sg-glass.sg-hot { will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .sg-glass.sg-rimmed, .sg-glass.sg-rimmed::after { transition-duration: .01s; } }

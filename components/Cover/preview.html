@@ -1,0 +1,72 @@
+<!-- @dsCard height=320 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sea Glass</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--paper); color:var(--ink); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; height:320px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:320px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:320px; }
+  .shade { fill:var(--shade); }
+  .coral { fill:var(--coral-fill); }
+  .lilac { fill:var(--lilac-fill); }
+  .lilac-hi { fill:var(--lilac-hi); }
+  .cobalt { fill:var(--cobalt-fill); }
+  .cobalt-hi { fill:var(--cobalt-hi); }
+  .seafoam { fill:var(--seafoam-fill); }
+  .amber { fill:var(--amber-fill); }
+  .lilac-ink { fill:var(--lilac-ink); }
+  .cobalt-ink { fill:var(--cobalt-ink); }
+  .tile { rx:var(--radius-lg); }
+  .words { position:absolute; left:var(--space-8); bottom:var(--space-8); max-width:440px; }
+  .name { margin:0; font-size:120px; line-height:.95; font-weight:600; letter-spacing:-.03em; color:var(--ink); }
+  .tag { margin:var(--space-3) 0 0 6px; font-size:14px; line-height:20px; color:var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 320" width="480" height="320">
+<!--
+  blocks      coral-fill disc ⌀96 · lilac-fill pill 304×80 · cobalt-fill pill 416×88 bled off the bottom · seafoam-fill tile 176×176 bled off the top-right · amber-fill disc ⌀48 — each with a shade copy offset space-2 down; ≈40% of 960×320
+  arrangement the staggered stack the components make: a disc over a nav pill over a prompt pill, widening downward, with one corner tile and one pebble as satellites
+  pattern     discs and pills from "全圆角" (radius-pill): lilac-hi segment pill and cobalt-hi inset disc cut into the bars, small lilac-ink / cobalt-ink pills and dots standing for labels and icons — 12 units
+  scales      sides in space-8 / space-12 / space-16 multiples; gutters space-6; inset space-2; tile corners radius-lg; pills and discs rx = half the short side
+-->
+<rect class="shade tile" x="320" y="-40" width="176" height="176" rx="28"/>
+<rect class="seafoam tile" x="320" y="-48" width="176" height="176" rx="28"/>
+<circle class="shade" cx="88" cy="72" r="48"/>
+<circle class="coral" cx="88" cy="64" r="48"/>
+<circle class="shade" cx="232" cy="72" r="24"/>
+<circle class="amber" cx="232" cy="64" r="24"/>
+<rect class="shade" x="40" y="152" width="304" height="80" rx="40"/>
+<rect class="lilac" x="40" y="144" width="304" height="80" rx="40"/>
+<rect class="lilac-hi" x="48" y="152" width="112" height="64" rx="32"/>
+<rect class="lilac-ink" x="72" y="176" width="16" height="16" rx="4"/>
+<rect class="lilac-ink" x="96" y="180" width="48" height="8" rx="4"/>
+<rect class="lilac-ink" x="184" y="180" width="64" height="8" rx="4"/>
+<rect class="lilac-ink" x="272" y="180" width="48" height="8" rx="4"/>
+<rect class="shade" x="16" y="264" width="416" height="88" rx="44"/>
+<rect class="cobalt" x="16" y="256" width="416" height="88" rx="44"/>
+<rect class="cobalt-ink" x="40" y="292" width="16" height="4" rx="2"/>
+<rect class="cobalt-ink" x="46" y="286" width="4" height="16" rx="2"/>
+<rect class="cobalt-ink" x="80" y="290" width="96" height="8" rx="4"/>
+<circle class="cobalt-hi" cx="388" cy="300" r="36"/>
+<rect class="cobalt-ink" x="370" y="294" width="4" height="12" rx="2"/>
+<rect class="cobalt-ink" x="379" y="288" width="4" height="24" rx="2"/>
+<rect class="cobalt-ink" x="388" y="282" width="4" height="36" rx="2"/>
+<rect class="cobalt-ink" x="397" y="288" width="4" height="24" rx="2"/>
+<rect class="cobalt-ink" x="406" y="294" width="4" height="12" rx="2"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Sea<br>Glass</h1>
+<p class="tag">Frosted colour, round shapes, soft light.</p>
+</div>
+</div>
+</body>
+</html>

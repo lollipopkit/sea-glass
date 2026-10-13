@@ -1,0 +1,149 @@
+<!-- @dsCard group="Examples" page height=1000 width=1280 subtitle="总览页：侧边导航、汇总栏、数据卡片与错误卡片的组合" -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>DashboardExample — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+<style>
+  .app { display: grid; grid-template-columns: 72px 1fr; gap: var(--space-6); width: 1280px; min-height: 1000px; box-sizing: border-box; padding: var(--space-6); background: var(--paper); }
+  .rail { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-3) 0; border-radius: var(--radius-pill); box-sizing: border-box; align-self: stretch; }
+  .rail .spacer { flex: 1; }
+  .rail-home { position: relative; margin-bottom: var(--space-2); }
+  .badge { position: absolute; right: -6px; top: -4px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--coral-ink); color: var(--coral-hi); font-size: 11px; line-height: 18px; font-weight: 600; }
+  .main { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+  .top { display: flex; align-items: center; gap: var(--space-3); height: 64px; }
+  .top h1 { margin: 0; display: flex; align-items: center; gap: var(--space-2); font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -.01em; }
+  .top h1 .hash { color: var(--ink-muted); font-weight: 500; }
+  .top .grow { flex: 1; }
+  .summary { display: flex; align-items: center; gap: var(--space-6); height: 64px; padding: 0 var(--space-3) 0 var(--space-4); border-radius: var(--radius-pill); }
+  .summary .sg-meter { width: 200px; }
+  .summary .sep { width: 1px; height: 28px; background: var(--line); }
+  .summary .grow { flex: 1; }
+  .online { font-size: 20px; line-height: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .online small { font-size: 13px; font-weight: 500; color: var(--ink-muted); margin-left: var(--space-1); }
+  .lat { font-size: 15px; font-weight: 500; }
+  .lat b { font-weight: 600; }
+  .muted { color: var(--ink-muted); }
+  .online, .lat, .cap, .head .name { white-space: nowrap; }
+  .head .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .cap { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--ink-muted); }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); align-items: start; }
+  .col { min-width: 0; display: flex; flex-direction: column; gap: var(--space-6); }
+  .card { border-radius: var(--radius-lg); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+  .head { display: flex; align-items: center; gap: var(--space-2); }
+  .head .name { display: inline-flex; align-items: center; gap: 2px; font-size: 20px; line-height: 26px; font-weight: 600; }
+  .head .name .sg-icon { color: var(--ink-muted); }
+  .head .grow { flex: 1; min-width: 0; }
+  .hero { display: flex; align-items: center; gap: var(--space-2); }
+  .hero .metric { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .hero .num { margin-left: auto; font-size: 34px; line-height: 40px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .foot .cap { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+  .rows { display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+  .io { display: flex; align-items: center; gap: var(--space-3); font-size: 15px; line-height: 20px; font-weight: 500; }
+  .io .sg-icon { color: var(--ink-muted); }
+  .io .v { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .center { text-align: center; }
+  .err { border-radius: var(--radius-md); padding: var(--space-4); background: var(--surface); display: flex; flex-direction: column; gap: var(--space-2); }
+  .err p { margin: 0; font-size: 13px; line-height: 19px; color: var(--ink-muted); }
+  .compact { flex-direction: row; align-items: center; padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  var S = window.SeaGlass, h = React.createElement;
+  function Name(t) { return h('span', { className: 'name' }, t, h(S.Icon, { name: 'chevron', size: 18 })); }
+  function Hero(icon, label, num, tone) {
+    return h('div', { className: 'hero' },
+      h(S.Chip, { tone: tone, icon: icon }, label),
+      h(S.Icon, { name: 'chevron-down', size: 16, className: 'muted' }),
+      h('span', { className: 'num' }, num));
+  }
+  function More(n) { return h(S.Button, { size: 'sm', tone: 'frost' }, '+' + n + ' more', h(S.Icon, { name: 'chevron-down', size: 16 })); }
+  function Head(name, meta) { return h('div', { className: 'head' }, Name(name), h('span', { className: 'grow' }), meta ? h('span', { className: 'cap' }, meta) : null, h(S.IconButton, { variant: 'bare', size: 'sm', icon: 'link', label: 'Share' })); }
+  var calm = [3,3,4,3,3,4,3,3,3,4,3,3,4,5,3,3,4,3,3,4];
+  var spiky = [.1,.1,.2,.1,1.8,.1,.1,.2,.1,.1,.3,.1,1.4,.1,.1,.6,.1,.1,1.3,.1,.1,.2,.1,.1,.4,1,.3,.1,.5,.1,.1,.2,.1,.1,.4,.1,1.6,.1,.1,.3];
+  var rise = [1.2,1.4,1.1,1.3,1.2,1.5,1.1,1.2,1.4,1.3,1.1,1.6,1.2,1.3,1.1,1.2,1.4,1.2,1.3,1.5,1.2,1.4,2.4,1.3,1.4,1.4,3.5];
+  var idle = [0,0,0,0,0,0,0,0,0,0,0,0];
+
+  var c1 = h('section', { className: 'card sg-glass sg-tone-frost' },
+    Head('Team workspace', '2 min ago'),
+    Hero('globe', 'Visits', '1,284', 'cobalt'),
+    h(S.Sparkline, { data: calm, max: 12, tone: 'cobalt', height: 56, label: 'Visits' }),
+    h('div', { className: 'foot' }, h('span', { className: 'cap' }, '12 members · 4 projects'), More(6)));
+
+  var c2 = h('section', { className: 'card compact sg-glass sg-tone-frost' },
+    h('div', { className: 'head', style: { flex: 1 } }, Name('Design files'), h('span', { className: 'grow' }), h(S.Chip, { tone: 'amber' }, 'Syncing'), h(S.IconButton, { variant: 'bare', size: 'sm', icon: 'link', label: 'Share' })));
+
+  var c3 = h('section', { className: 'card sg-glass sg-tone-frost' },
+    Head('Newsletter', 'Sent yesterday'),
+    Hero('sparkle', 'Opens', '42%', 'cobalt'),
+    h(S.Sparkline, { data: spiky, max: 2, tone: 'cobalt', height: 56, label: 'Opens' }),
+    h('div', { className: 'foot' }, h('span', { className: 'cap' }, '8,210 recipients'), More(3)));
+
+  var c4 = h('section', { className: 'card sg-glass sg-tone-frost' },
+    Head('Media library', '3 days'),
+    Hero('image', 'Uploads', '3.5 MB/s', 'aqua'),
+    h(S.Sparkline, { data: rise, max: 3.6, tone: 'aqua', height: 56, label: 'Upload speed' }),
+    h('div', { className: 'cap center' }, '128 photos · 12 videos today'),
+    h('div', { className: 'rows' },
+      h(S.Meter, { icon: 'image', label: 'Photos', value: 3.7, tone: 'cobalt' }),
+      h(S.Meter, { icon: 'folder', label: 'Files', value: 30.8, tone: 'lilac' }),
+      h(S.Meter, { icon: 'globe', label: 'Quota', value: 48.8, tone: 'seafoam' }),
+      h('div', { className: 'io' }, h(S.Icon, { name: 'refresh', size: 20 }), 'Transfers', h('span', { className: 'cap' }, '0 waiting'), h('span', { className: 'v' }, '158.9 KB/s'))),
+    h('div', { className: 'foot', style: { justifyContent: 'flex-end' } }, h(S.Button, { size: 'sm', tone: 'frost' }, 'Show less')));
+
+  function Failed(name, msg) {
+    return h('section', { className: 'card sg-glass sg-tone-frost' },
+      h('div', { className: 'head' }, Name(name), h('span', { className: 'grow' }), h(S.Button, { size: 'sm', tone: 'frost' }, 'View error'), h(S.IconButton, { variant: 'bare', size: 'sm', icon: 'refresh', label: 'Retry' })),
+      h('div', { className: 'err' },
+        h('div', null, h(S.Chip, { tone: 'coral', icon: 'close' }, 'Failed')),
+        h('p', null, msg)));
+  }
+
+  var c5 = h('section', { className: 'card sg-glass sg-tone-frost' },
+    Head('Video exports', 'Idle'),
+    Hero('wave', 'Queue', '0', 'lilac'),
+    h(S.Sparkline, { data: idle, max: 100, tone: 'lilac', height: 56, label: 'Export queue' }),
+    h('div', { className: 'cap center' }, 'No exports running'),
+    h('div', { className: 'rows' },
+      h(S.Meter, { icon: 'image', label: 'Photos', value: 10.5, tone: 'cobalt' }),
+      h(S.Meter, { icon: 'folder', label: 'Files', value: 68.9, tone: 'lilac' }),
+      h(S.Meter, { icon: 'globe', label: 'Quota', value: 84.9, tone: 'seafoam' })),
+    h('div', { className: 'foot', style: { justifyContent: 'flex-end' } }, h(S.Button, { size: 'sm', tone: 'frost' }, 'Show less')));
+
+  var railIcons = [['layout', 'Overview'], ['folder', 'Files'], ['image', 'Photos'], ['sparkle', 'Assistant'], ['globe', 'Sharing'], ['more', 'More']];
+  var app = h('div', { className: 'app' },
+    h('nav', { className: 'rail sg-glass sg-tone-frost', 'aria-label': 'Main' },
+      h('div', { className: 'rail-home' }, h(S.IconButton, { variant: 'inset', tone: 'coral', icon: 'grid', label: 'Home' }), h('span', { className: 'badge' }, '3')),
+      railIcons.map(function (r) { return h(S.IconButton, { key: r[0], variant: 'bare', tone: 'frost', icon: r[0], label: r[1] }); }),
+      h('span', { className: 'spacer' }),
+      h(S.IconButton, { variant: 'bare', tone: 'frost', icon: 'settings', label: 'Settings' })),
+    h('main', { className: 'main' },
+      h('header', { className: 'top' },
+        h('h1', null, h('span', { className: 'hash' }, '#'), 'All', h(S.Icon, { name: 'chevron-down', size: 20 })),
+        h('span', { className: 'grow' }),
+        h(S.SegmentedNav, { 'aria-label': 'View', tone: 'lilac', items: [{ id: 'card', label: 'Cards', icon: 'grid' }, { id: 'list', label: 'List', icon: 'list' }] }),
+        h(S.IconButton, { icon: 'search', label: 'Search' }),
+        h(S.IconButton, { icon: 'globe', label: 'Sharing' }),
+        h(S.IconButton, { tone: 'cobalt', icon: 'plus', label: 'Add' })),
+      h('div', { className: 'summary sg-glass sg-tone-frost' },
+        h(S.Chip, { tone: 'seafoam' }, 'Active'),
+        h('span', { className: 'online' }, '5 / 7'),
+        h('span', { className: 'sep' }),
+        h(S.Meter, { label: 'Photos', value: 4.3, tone: 'cobalt' }),
+        h(S.Meter, { label: 'Files', value: 63.5, tone: 'lilac' }),
+        h(S.Meter, { label: 'Quota', value: 71.3, tone: 'seafoam' }),
+        h('span', { className: 'sep' }),
+        h('span', { className: 'lat' }, 'Last sync · ', h('b', null, '2.4 s')),
+        h('span', { className: 'grow' }),
+        h('span', { className: 'cap' }, 'Just now'),
+        h(S.IconButton, { variant: 'bare', size: 'sm', icon: 'chevron-down', label: 'Expand summary' })),
+      h('div', { className: 'grid' },
+        h('div', { className: 'col' }, c1, c2, c3),
+        h('div', { className: 'col' }, c4, Failed('Backup', 'Connection failed. The backup could not reach the storage location. Check the network connection and try again.')),
+        h('div', { className: 'col' }, c5, Failed('Calendar import', 'Import failed. The file uses a format this version cannot read. Export it again as .ics and retry.')))));
+  ReactDOM.createRoot(document.getElementById('root')).render(app);
+</script>
+</body>
+</html>
