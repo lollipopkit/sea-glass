@@ -1511,6 +1511,10 @@ td code{white-space:nowrap}
     R.useLayoutEffect(function () {
       var el = ref.current; if (!el || !pl) return;
       stop();
+      /* mask the rim for the final box before the panel starts at the control's size: the first ResizeObserver report
+         comes mid-animation, and a mask made there is too small to slice, so the side rims would be missing until the
+         size settled */
+      rimUpdate(el);
       var reduced = tbReduced(), A = pl.a, w = el.offsetWidth, hgt = el.offsetHeight, closing = p.closing;
       var dur = reduced ? 1 : (closing ? 300 : 440), ease = closing ? 'cubic-bezier(.4, 0, .2, 1)' : TB_EASE;
       /* the start box sits exactly on the control: same size, shifted back over it */
