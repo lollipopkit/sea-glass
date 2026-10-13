@@ -1,6 +1,12 @@
 /* @ds-bundle: {"format":4,"namespace":"SeaGlass","components":[{"name":"Button"},{"name":"IconButton"},{"name":"SegmentedNav"},{"name":"PromptBar"},{"name":"Chip"},{"name":"GlassCard"},{"name":"Meter"},{"name":"Sparkline"},{"name":"Slider"},{"name":"ScrollArea"},{"name":"Toolbar"},{"name":"Fab"},{"name":"SwatchPicker"},{"name":"ToggleButton"},{"name":"Icon"}]} */
-(function () {
-  var R = window.React, h = R.createElement;
+(function (root, factory) {
+  /* UMD: CommonJS (npm, bundlers) or a classic <script> that extends window.SeaGlass */
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('react'));
+  else root.SeaGlass = Object.assign(root.SeaGlass || {}, factory(root.React));
+})(typeof self !== 'undefined' ? self : this, function (R) {
+  var h = R.createElement;
+  /* DOM-wide listeners and grain tiles start only in a browser, so the module also loads during server rendering */
+  var BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
   var TONES = ['seafoam', 'aqua', 'cobalt', 'lilac', 'coral', 'amber', 'frost'];
   function cx() { return Array.prototype.filter.call(arguments, Boolean).join(' '); }
   function tone(t, fallback) { return 'sg-tone-' + (TONES.indexOf(t) >= 0 ? t : fallback); }
@@ -272,7 +278,7 @@
     while (el && out.length < 4) { out.push(el); el = el.parentElement ? el.parentElement.closest(SPOT_SEL) : null; }
     return out;
   }
-  if (!window.__sgSpot) {
+  if (BROWSER && !window.__sgSpot) {
     window.__sgSpot = true;
     var pending = null, frame = 0;
     var apply = function () {
@@ -317,7 +323,7 @@
      toward the pointer instead of jumping. Amounts are clamped so small elements do not over-deform. */
   var JELLY = { dir: 7, centre: 3, bulge: 0.45, maxA: 0.11, ease: 0.3,
     press: { k: 900, c: 46 }, release: { k: 380, c: 13.5 } };
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+  var reduceMotion = BROWSER && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
   function jellyState(el) {
     if (!el.__sgJelly) el.__sgJelly = { p: 0, v: 0, target: 0, nx: 0, ny: 0, tx: 0, ty: 0, raf: 0, last: 0, spring: JELLY.press };
     return el.__sgJelly;
@@ -359,7 +365,7 @@
     s.ty = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
     if (snap) { s.nx = s.tx; s.ny = s.ty; }
   }
-  if (!window.__sgJelly) {
+  if (BROWSER && !window.__sgJelly) {
     window.__sgJelly = true;
     var active = null;
     var release = function () {
@@ -648,7 +654,7 @@
     el.style.setProperty('--sg-band-x1', Math.round(24 + Math.random() * 20) + '%');
     el.style.setProperty('--sg-band-x2', Math.round(56 + Math.random() * 20) + '%');
   }
-  if (!window.__sgGrainInit && typeof document !== 'undefined' && document.createElement) {
+  if (BROWSER && !window.__sgGrainInit && document.createElement) {
     window.__sgGrainInit = true;
     var seed = (window.crypto && window.crypto.getRandomValues) ? window.crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 4294967296);
     var grainKey = function (d, F) { return (d ? 1 : 0) + JSON.stringify(F); };
@@ -1004,6 +1010,6 @@
   }
   function resetParams(el) { var o = {}; for (var i = 0; i < PARAMS.length; i++) o[PARAMS[i].id] = null; setParams(o, el); }
 
-  var api = { Button: Button, IconButton: IconButton, SegmentedNav: SegmentedNav, PromptBar: PromptBar, Chip: Chip, GlassCard: GlassCard, Meter: Meter, Sparkline: Sparkline, Slider: Slider, ScrollArea: ScrollArea, Toolbar: Toolbar, Fab: Fab, SwatchPicker: SwatchPicker, ToggleButton: ToggleButton, MenuPanel: MenuPanel, Icon: Icon, tones: TONES, params: PARAMS, setParams: setParams, getParams: getParams, resetParams: resetParams, refreshGrain: function () { if (window.__sgRefreshGrain) window.__sgRefreshGrain(); } };
-  window.SeaGlass = Object.assign(window.SeaGlass || {}, api);
-})();
+  var api = { Button: Button, IconButton: IconButton, SegmentedNav: SegmentedNav, PromptBar: PromptBar, Chip: Chip, GlassCard: GlassCard, Meter: Meter, Sparkline: Sparkline, Slider: Slider, ScrollArea: ScrollArea, Toolbar: Toolbar, Fab: Fab, SwatchPicker: SwatchPicker, ToggleButton: ToggleButton, MenuPanel: MenuPanel, Icon: Icon, tones: TONES, params: PARAMS, setParams: setParams, getParams: getParams, resetParams: resetParams, refreshGrain: function () { if (BROWSER && window.__sgRefreshGrain) window.__sgRefreshGrain(); } };
+  return api;
+});

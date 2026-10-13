@@ -1,0 +1,54 @@
+{
+  "name": "sea-glass",
+  "version": "0.1.0",
+  "description": "Frosted-glass React components with grain, rim light, hover light and jelly press",
+  "keywords": [
+    "react",
+    "components",
+    "design-system",
+    "glass",
+    "ui"
+  ],
+  "author": "lollipopkit",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lollipopkit/sea-glass.git"
+  },
+  "homepage": "https://github.com/lollipopkit/sea-glass#readme",
+  "bugs": {
+    "url": "https://github.com/lollipopkit/sea-glass/issues"
+  },
+  "sideEffects": [
+    "*.css",
+    "./components/bundle.js"
+  ],
+  "main": "./components/bundle.js",
+  "module": "./components/index.mjs",
+  "types": "./components/index.d.ts",
+  "unpkg": "./components/bundle.js",
+  "jsdelivr": "./components/bundle.js",
+  "exports": {
+    ".": {
+      "types": "./components/index.d.ts",
+      "import": "./components/index.mjs",
+      "require": "./components/bundle.js"
+    },
+    "./style.css": "./components/bundle.css",
+    "./tokens.css": "./tokens/tokens.css",
+    "./tokens.json": "./tokens/tokens.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "components/bundle.js",
+    "components/bundle.css",
+    "components/index.mjs",
+    "components/index.d.ts",
+    "tokens/tokens.css",
+    "tokens/tokens.json",
+    "docs/design.md"
+  ],
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

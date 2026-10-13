@@ -40,4 +40,8 @@ export interface GlassParam { id: string; css: string; def: number; min: number;
 export declare function setParams(values: Record<string, number | string | null>, element?: HTMLElement): void;
 export declare function getParams(element?: HTMLElement): Record<string, number>;
 export declare function resetParams(element?: HTMLElement): void;
-declare global { interface Window { SeaGlass: { Button: typeof Button; IconButton: typeof IconButton; SegmentedNav: typeof SegmentedNav; PromptBar: typeof PromptBar; Chip: typeof Chip; GlassCard: typeof GlassCard; Meter: typeof Meter; Sparkline: typeof Sparkline; Slider: typeof Slider; ScrollArea: typeof ScrollArea; Toolbar: typeof Toolbar; Fab: typeof Fab; SwatchPicker: typeof SwatchPicker; ToggleButton: typeof ToggleButton; Icon: typeof Icon; tones: Tone[]; params: GlassParam[]; setParams: typeof setParams; getParams: typeof getParams; resetParams: typeof resetParams } } }
+/** Redraws the grain tiles, e.g. after changing the grain CSS custom properties directly. */
+export declare function refreshGrain(): void;
+export declare const tones: Tone[];
+export declare const params: GlassParam[];
+declare global { interface Window { SeaGlass: { Button: typeof Button; IconButton: typeof IconButton; SegmentedNav: typeof SegmentedNav; PromptBar: typeof PromptBar; Chip: typeof Chip; GlassCard: typeof GlassCard; Meter: typeof Meter; Sparkline: typeof Sparkline; Slider: typeof Slider; ScrollArea: typeof ScrollArea; Toolbar: typeof Toolbar; Fab: typeof Fab; SwatchPicker: typeof SwatchPicker; ToggleButton: typeof ToggleButton; Icon: typeof Icon; tones: Tone[]; params: GlassParam[]; setParams: typeof setParams; getParams: typeof getParams; resetParams: typeof resetParams; refreshGrain: typeof refreshGrain } } }

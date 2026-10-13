@@ -8,7 +8,8 @@
 | --- | --- |
 | `tokens/tokens.json` | 设计令牌：颜色（日间、夜间两套主题）、字体、间距、圆角、投影、不透明度 |
 | `tokens/tokens.css` | 由 `tokens.json` 生成的 CSS 自定义属性；默认日间，`data-theme="dark"` 或系统深色设置时为夜间 |
-| `components/bundle.js` | 全部 React 组件，挂在 `window.SeaGlass` 上（经典脚本，不需要构建） |
+| `components/bundle.js` | 全部 React 组件（UMD：作为经典脚本时挂在 `window.SeaGlass` 上，不需要构建；也可作为 CommonJS 模块引入） |
+| `components/index.mjs` | npm 包的 ESM 入口 |
 | `components/bundle.css` | 组件样式、玻璃质感与全部可调参数 |
 | `components/index.d.ts` | TypeScript 类型声明 |
 | `components/<组件>/` | 每个组件的说明（`README.md`）和预览片段（`preview.html`） |
@@ -18,6 +19,22 @@
 | `examples/minimal.html` | 最小使用示例 |
 
 ## 使用
+
+### npm
+
+```sh
+npm i sea-glass
+```
+
+```js
+import 'sea-glass/tokens.css';
+import 'sea-glass/style.css';
+import { Button, SegmentedNav, Toolbar, setParams } from 'sea-glass';
+```
+
+需要 React 18 及以上版本（peer dependency）。字体 Google Sans Flex 需自行引入（见下方 `<link>`）。同时提供 ESM、CommonJS 和 TypeScript 类型，可在服务端渲染时加载；悬停光、按压形变和颗粒只在浏览器中启动。
+
+### `<script>` 标签
 
 依赖 React 18 与 ReactDOM 18（UMD 版本）。按以下顺序加载：
 
